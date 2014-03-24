@@ -43,6 +43,7 @@ def parser_setup():
                            "simulate per dice combination (default: "
                            "%(default)s)")
     argparser.add_argument("-d", "--debug", action="store_true")
+    argparser.add_argument("--nograph", action="store_false", dest="graph")
     # Sub-parser for modules to register themselves
     subparser = argparser.add_subparsers(title='Subcommands',
                                          dest='ruleset')
@@ -108,18 +109,19 @@ def main():
             print "DEBUG: color_list"
             pprint(color_list)
             print
-        plot = (ggplot.ggplot(ggplot.aes(x=rulemod.result_label,
-                                         y="Percent",
-                                         color=rulemod.skills_label),
-                              data=graph_data) +
-                ggplot.ggtitle(rulemod.titles[diff]) +
-                ggplot.scale_x_discrete(breaks=rulemod.scale_breaks,
-                                        labels=rulemod.scale_labels) +
-                ggplot.theme_seaborn() +
-                ggplot.scale_colour_manual(values=color_list) +
-                ggplot.geom_line() +
-                ggplot.geom_point(alpha=0.3, size=50)
-                )
-        ggplot.ggsave("%s_%s.png" % (args.ruleset, diff), plot, dpi=75)
+        if args.graph:
+            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.result_label,
+                                             y="Percent",
+                                             color=rulemod.skills_label),
+                                  data=graph_data) +
+                    ggplot.ggtitle(rulemod.titles[diff]) +
+                    ggplot.scale_x_discrete(breaks=rulemod.scale_breaks,
+                                            labels=rulemod.scale_labels) +
+                    ggplot.theme_seaborn() +
+                    ggplot.scale_colour_manual(values=color_list) +
+                    ggplot.geom_line() +
+                    ggplot.geom_point(alpha=0.3, size=50)
+                    )
+            ggplot.ggsave("%s_%s.png" % (args.ruleset, diff), plot, dpi=75)
 
     return 0
