@@ -43,6 +43,7 @@ def parser_setup():
                            "simulate per dice combination (default: "
                            "%(default)s)")
     argparser.add_argument("-d", "--debug", action="store_true")
+    argparser.add_argument("--dumpsave", action="store_true")
     argparser.add_argument("--nograph", action="store_false", dest="graph")
     # Sub-parser for modules to register themselves
     subparser = argparser.add_subparsers(title='Subcommands',
@@ -64,9 +65,9 @@ def main():
         print
 
     results = list()
-    pool = multiprocessing.Pool(1)
+    pool = multiprocessing.Pool()
     try:
-        for result in pool.map(rulemod.simulate_rolls, rulemod.skills):
+        for result in pool.map(rulemod.simulate_rolls, rulemod.variables):
             results.extend(result)
         pool.close()
         pool.join()
@@ -78,23 +79,23 @@ def main():
         pprint(results)
         print
 
-    columns = ("Difficulty", rulemod.skills_label, rulemod.result_label,
-               "Count", "Percent")
+    columns = ("Batch", rulemod.variables_label, rulemod.x_label, "Count",
+               "Percent")
     data = pandas.DataFrame.from_records(results, columns=columns)
 
-    for diff in rulemod.difficulties:
-
-        graph_data = data[data["Difficulty"] == diff]
+    for batch in rulemod.batches:
+        # graph data
+        graph_data = data[data["Batch"] == batch]
         graph_data.index = range(1, len(graph_data) + 1)
         if args.debug:
             print "DEBUG: graph_data:"
             pprint(graph_data)
             print
-
+        # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
         colors_upper = ["#006666", "#003399", "#0000cc", "#0000ff"]
         colors_mid = ["#000000", ]
-        color_count = len(rulemod.skills) - 1
+        color_count = len(rulemod.variables) - 1
         if color_count % 2 == 0:
             lower_slice = (color_count / 2) * -1
             upper_slice = color_count / 2
@@ -109,19 +110,41 @@ def main():
             print "DEBUG: color_list"
             pprint(color_list)
             print
+        # graph
+        graph = dict()
+        batch_items = ("graph_type", "scale_breaks", "scale_labels", "title",
+                       "variables_label")
+        for item in batch_items:
+            if item in rulemod.batches[batch]:
+                 graph[item] = rulemod.batches[batch][item]
+            else:
+                 graph[item] = getattr(rulemod, item)
+        if args.debug:
+            print "DEBUG: graph:"
+            pprint(graph)
+            print
         if args.graph:
-            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.result_label,
-                                             y="Percent",
-                                             color=rulemod.skills_label),
+            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.x_label, y="Percent",
+                                             color=graph["variables_label"]),
                                   data=graph_data) +
-                    ggplot.ggtitle(rulemod.titles[diff]) +
-                    ggplot.scale_x_discrete(breaks=rulemod.scale_breaks,
-                                            labels=rulemod.scale_labels) +
+                    ggplot.ggtitle(graph["title"]) +
+                    ggplot.scale_x_discrete(breaks=graph["scale_breaks"],
+                                            labels=graph["scale_labels"]) +
                     ggplot.theme_seaborn() +
-                    ggplot.scale_colour_manual(values=color_list) +
-                    ggplot.geom_line() +
-                    ggplot.geom_point(alpha=0.3, size=50)
+                    ggplot.scale_colour_manual(values=color_list)
                     )
-            ggplot.ggsave("%s_%s.png" % (args.ruleset, diff), plot, dpi=75)
+            if graph["graph_type"] == "bars":
+                plot += ggplot.geom_line(size=20)
+#                plot += ggplot.geom_point(size=80)
+                plot += ggplot.scale_y_continuous(limits=(20,100))
+            else:
+                plot += ggplot.geom_line()
+                plot += ggplot.geom_point(alpha=0.3, size=50)
+            plot.rcParams["font.family"] = "monospace"
+            if args.dumpsave:
+                filename = "/dev/null"
+            else:
+                filename = "%s_%s.png" % (args.ruleset, batch)
+            ggplot.ggsave(filename, plot, format="png", dpi=75)
 
     return 0
