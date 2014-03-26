@@ -89,6 +89,7 @@ header
 export ARCHFLAGS='-Wno-error=unused-command-line-argument-hard-error-in-future'
 export CFLAGS='-Qunused-arguments -I'
 export CPPFLAGS='-Qunused-arguments'
+export PKG_CONFIG_PATH='/usr/X11/lib/pkgconfig'
 echo 'Done.'
 echo
 echo
