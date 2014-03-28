@@ -81,14 +81,19 @@ def main():
     columns = ("Batch", rulemod.variables_label, rulemod.outcomes_label,
                "Count", "Percent")
     data = pandas.DataFrame.from_records(results, columns=columns)
-    for batch in rulemod.batches:
-        # graph data
-        graph_data = data[data["Batch"] == batch]
-        graph_data.index = range(1, len(graph_data) + 1)
+    for i in rulemod.batches:
+        batch = rulemod.batches[i]
+
+        # plot_data
+        plot_data = data[data["Batch"] == i]
+        plot_data.index = range(1, len(plot_data) + 1)
         if args.debug:
-            print "DEBUG: graph_data:"
-            pprint(graph_data)
+            print "DEBUG: plot_data:"
+            pprint(plot_data)
             print
+
+        # Graph Defaults
+        graph = dict()
         # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
         colors_upper = ["#006666", "#003399", "#0000cc", "#0000ff"]
@@ -100,48 +105,42 @@ def main():
         else:
             lower_slice = ((color_count - 1) / 2) * -1
             upper_slice = (color_count + 1) / 2
-        color_list = (colors_lower[lower_slice:] + colors_mid +
-                      colors_upper[0:upper_slice])
-        if args.debug:
-            print "DEBUG: lower_slice:", lower_slice
-            print "DEBUG: upper_slice:", upper_slice
-            print "DEBUG: color_list"
-            pprint(color_list)
-            print
-        # graph
-        graph = dict()
-        batch_items = ("graph_type", "scale_breaks", "scale_labels", "title",
-                       "variables_label")
+        graph["color_list"] = (colors_lower[lower_slice:] + colors_mid +
+                               colors_upper[0:upper_slice])
+
+        # Graph from batch
+        batch_items = ("color_list", "graph_type", "limits", "scale_breaks",
+                       "scale_labels", "title", "variables_label")
         for item in batch_items:
-            if item in rulemod.batches[batch]:
-                 graph[item] = rulemod.batches[batch][item]
-            else:
-                 graph[item] = getattr(rulemod, item)
-        try:
-            graph["color_list"] = rulemod.batches[batch]["color_list"]
-        except:
-             graph["color_list"] = color_list
+            try:
+                graph[item] = batch[item]
+            except:
+                try:
+                    graph[item] = getattr(rulemod, item)
+                except:
+                    if item not in graph:
+                        graph[item] = None
         if args.debug:
             print "DEBUG: graph:"
             pprint(graph)
             print
+
+        # Create plot
         if args.graph:
             plot = (ggplot.ggplot(ggplot.aes(x=rulemod.outcomes_label,
                                              y="Percent",
                                              color=graph["variables_label"]),
-                                  data=graph_data) +
+                                  data=plot_data) +
                     ggplot.ggtitle(graph["title"]) +
                     ggplot.scale_x_discrete(breaks=graph["scale_breaks"],
                                             labels=graph["scale_labels"]) +
                     ggplot.theme_seaborn() +
                     ggplot.scale_colour_manual(values=graph["color_list"])
                     )
-            if rulemod.limits:
-                plot += ggplot.scale_y_continuous(limits=rulemod.limits)
+            if graph["limits"]:
+                plot += ggplot.scale_y_continuous(limits=graph["limits"])
             if graph["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
-#                plot += ggplot.geom_point(size=80)
-                plot += ggplot.scale_y_continuous(limits=(20,100))
             else:
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
@@ -149,7 +148,10 @@ def main():
             if args.dumpsave:
                 filename = "/dev/null"
             else:
-                filename = "%s_%s.png" % (args.ruleset, batch)
+                suffix = str()
+                if "file_suffix" in batch:
+                    suffix = batch["file_suffix"]
+                filename = "%s%s%s.png" % (args.ruleset, i, suffix)
             ggplot.ggsave(filename, plot, format="png", dpi=75)
 
     return 0

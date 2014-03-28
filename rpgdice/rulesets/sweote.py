@@ -2,22 +2,11 @@
 # vim: set fileencoding=utf-8 :
 import os.path
 
-
-# Defaults
 args = None
 batches = dict()
-graph_type = None
-limits = None
-outcomes_label = "Outcomes"
 ruleset = os.path.basename(__file__).split(".")[0]
-scale_breaks = None
-scale_labels = None
 srand = None
-variables = None
-variables_label = None
 
-
-# Ruleset
 title = "Star Wars: Edge of the Empire"
 symbols = { "fs": ("1 Failure", "2 Success"), "d": ("5 Despair", ),
             "ta": ("3 Threat", "4 Advantage"), "t": ("6 Triumphs", )}
@@ -63,6 +52,7 @@ for variable in dice_combos:
     if dice_abil:
         dice = "%s, %d Ability" % (dice, dice_abil)
     dice = dice.strip(", ")
+    batch["file_suffix"] = "_%s" % desc.lower().replace(" ", "_")
     batch["title"] = "%s\n%s\n%s" % (title, dice, desc)
     bottom = (-2 * dice_chal) + (-2 * dice_diff)
     top = (2 * dice_prof) + (2 * dice_abil) + 1
@@ -70,6 +60,7 @@ for variable in dice_combos:
     batch["scale_labels"] = [abs(x) for x in batch["scale_breaks"]]
 variables_label = "Symbol"
 limits = (-1, 35)
+outcomes_label = "Outcomes"
 
 
 def setup(subparser):
