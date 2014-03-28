@@ -12,7 +12,7 @@ import pandas
 # RPG Dice
 from .rulesets import crypto
 from .rulesets import dw
-
+from .rulesets import sweote
 
 args = None
 rulemod = None
@@ -73,16 +73,14 @@ def main():
         pool.join()
     except KeyboardInterrupt:
         sys.exit(130)
-
     if args.debug:
         print "DEBUG: results:"
         pprint(results)
         print
 
-    columns = ("Batch", rulemod.variables_label, rulemod.x_label, "Count",
-               "Percent")
+    columns = ("Batch", rulemod.variables_label, rulemod.outcomes_label,
+               "Count", "Percent")
     data = pandas.DataFrame.from_records(results, columns=columns)
-
     for batch in rulemod.batches:
         # graph data
         graph_data = data[data["Batch"] == batch]
@@ -119,20 +117,27 @@ def main():
                  graph[item] = rulemod.batches[batch][item]
             else:
                  graph[item] = getattr(rulemod, item)
+        try:
+            graph["color_list"] = rulemod.batches[batch]["color_list"]
+        except:
+             graph["color_list"] = color_list
         if args.debug:
             print "DEBUG: graph:"
             pprint(graph)
             print
         if args.graph:
-            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.x_label, y="Percent",
+            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.outcomes_label,
+                                             y="Percent",
                                              color=graph["variables_label"]),
                                   data=graph_data) +
                     ggplot.ggtitle(graph["title"]) +
                     ggplot.scale_x_discrete(breaks=graph["scale_breaks"],
                                             labels=graph["scale_labels"]) +
                     ggplot.theme_seaborn() +
-                    ggplot.scale_colour_manual(values=color_list)
+                    ggplot.scale_colour_manual(values=graph["color_list"])
                     )
+            if rulemod.limits:
+                plot += ggplot.scale_y_continuous(limits=rulemod.limits)
             if graph["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
 #                plot += ggplot.geom_point(size=80)

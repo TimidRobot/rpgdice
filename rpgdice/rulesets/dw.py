@@ -2,18 +2,29 @@
 # vim: set fileencoding=utf-8 :
 import os.path
 
-args = None
-srand = None
-ruleset = os.path.basename(__file__).split(".")[0]
-graph_type = None
 
+# Defaults
+args = None
+batches = dict()
+graph_type = None
+limits = None
+outcomes_label = "Outcomes"
+ruleset = os.path.basename(__file__).split(".")[0]
+scale_breaks = None
+scale_labels = None
+srand = None
+variables = None
+variables_label = None
+
+
+# Ruleset
 title = "Dungeon World"
 batches = {0: dict(), 1: dict()}
 batches[0]["title"] = "%s - Simplified Results" % title
 batches[1]["title"] = "%s - Raw Results" % title
-variables = xrange(-3, 4)  # ability modifier range
+variables = xrange(-3, 4)  # Ability modifier range
 variables_label = "Ability Score"
-x_label = "Result"
+outcomes_label = "Result"
 scale_breaks = range(-1, 16)
 scale_labels = scale_breaks
 batches[0]["scale_breaks"] = [6, 8, 10]
