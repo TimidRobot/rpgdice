@@ -46,8 +46,8 @@ def parser_setup():
     argparser.add_argument("--dumpsave", action="store_true")
     argparser.add_argument("--nograph", action="store_false", dest="graph")
     # Sub-parser for modules to register themselves
-    subparser = argparser.add_subparsers(title='Subcommands',
-                                         dest='ruleset')
+    subparser = argparser.add_subparsers(title="Ruleset subcommands:",
+                                         dest="ruleset", metavar="RULESET" )
     return (argparser, subparser)
 
 
