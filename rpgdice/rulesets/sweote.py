@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 import os.path
+# Third-party
+import ggplot
 
 args = None
 batches = dict()
@@ -8,6 +10,9 @@ ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
 title = "Star Wars: Edge of the Empire"
+variables_label = "Symbol"
+limits = (-1, 35)
+outcomes_label = "Outcomes"
 symbols = { "fs": ("1 Failure", "2 Success"), "d": ("5 Despair", ),
             "ta": ("3 Threat", "4 Advantage"), "t": ("6 Triumphs", )}
 # (failure, threat, despair)
@@ -25,42 +30,47 @@ die_prof = {1: (0, 0, 0), 2: (1, 0, 0), 3: (1, 0, 0), 4: (2, 0, 0),
 die_abil = {1: (0, 0), 2: (1, 0), 3: (1, 0), 4: (2, 0), 5: (0, 1), 6: (0, 1),
             7: (0, 2), 8: (1, 1)}
 # (challenge, difficulty, proficiency, ability, title)
-dice_combos = {0: (2, 1, 0, 2, "Advesary vs Novice"),
-               1: (2, 1, 0, 4, "Advesary vs Talented"),
-               2: (2, 1, 3, 1, "Advesary vs Pro"),
-               3: (0, 3, 0, 2, "Hard vs Novice"),
-               4: (0, 3, 0, 4, "Hard vs Talented"),
-               5: (0, 3, 3, 1, "Hard vs Pro"),
-               6: (0, 1, 0, 2, "Easy vs Novice"),
-               7: (0, 1, 0, 4, "Easy vs Talented"),
-               8: (0, 1, 3, 1, "Easy vs Pro")}
+dice_combos = {0: (0, 2, 0, 2, "Unskilled PC vs Average"),
+               1: (0, 3, 0, 2, "Unskilled PC vs Hard"),
+               2: (2, 1, 0, 2, "Unskilled PC vs Advesary"),
+               3: (0, 2, 0, 4, "Talented PC vs Average"),
+               4: (0, 3, 0, 4, "Talented PC vs Hard"),
+               5: (2, 1, 0, 4, "Talented PC vs Advesary"),
+               6: (0, 2, 3, 1, "Pro PC vs Average"),
+               7: (0, 3, 3, 1, "Pro PC vs Hard"),
+               8: (2, 1, 3, 1, "Pro PC vs Advesary"),
+               }
 variables = dice_combos.keys()
+# Batches
 for variable in dice_combos:
     batches[variable] = dict()
     batch = batches[variable]
     batch["color_list"] = ["#4B0082", "#008000", "#000000", "#87CEFA"]
     dice_chal, dice_diff, dice_prof, dice_abil, desc = dice_combos[variable]
     dice = str()
+    batch["symbols"] = str()
     if dice_chal:
         dice = "%s, %d Challenge" % (dice, dice_chal)
+        batch["symbols"] = "%s%s" % (batch["symbols"], "c" * dice_chal)
         batches[variable]["color_list"].append("#ff0000")
     if dice_diff:
         dice = "%s, %d Difficulty" % (dice, dice_diff)
+        batch["symbols"] = "%s%s" % (batch["symbols"], "d" * dice_diff)
     if dice_prof:
         dice = "%s, %d Proficiency" % (dice, dice_prof)
+        batch["symbols"] = "%s%s" % (batch["symbols"], "C" * dice_prof)
         batches[variable]["color_list"].append("#ffff00")
     if dice_abil:
         dice = "%s, %d Ability" % (dice, dice_abil)
+        batch["symbols"] = "%s%s" % (batch["symbols"], "D" * dice_abil)
     dice = dice.strip(", ")
     batch["file_suffix"] = "_%s" % desc.lower().replace(" ", "_")
     batch["title"] = "%s\n%s\n%s" % (title, dice, desc)
-    bottom = (-2 * dice_chal) + (-2 * dice_diff)
-    top = (2 * dice_prof) + (2 * dice_abil) + 1
-    batch["scale_breaks"] = range(bottom, 0) + [0, ] + range(1, top)
-    batch["scale_labels"] = [abs(x) for x in batch["scale_breaks"]]
-variables_label = "Symbol"
-limits = (-1, 35)
-outcomes_label = "Outcomes"
+    batch["title"] = "%s\n%s" % (title, desc)
+    range_bottom = (-2 * dice_chal) + (-2 * dice_diff)
+    range_top = (2 * dice_prof) + (2 * dice_abil) + 1
+    batch["scale_breaks"] = [range_bottom - 0.5, ] + range(range_bottom, range_top) + [range_top - 0.5, ]
+    batch["scale_labels"] = [" ", ] + [abs(x) for x in range(range_bottom, range_top)] + [" ", ]
 
 
 def setup(subparser):
@@ -139,3 +149,33 @@ def simulate_rolls(variable):
                 percent = round((float(count) / float(args.rolls)) * 100, 1)
                 data.append((variable, s, result, count, percent))
     return sorted(data)
+
+
+def update_plot(i, batch, conf, plot):
+    """Add dice symbos to plot."""
+    top0 = conf["limits"][1] - 1
+    top1 = top0 - 1.2
+    left0 = conf["scale_breaks"][0] + 1
+    left1 = left0
+    colors = {"c": "#ff0000", "d": "#4B0082", "C": "#ffff00", "D": "#008000"}
+    breaks = len(conf["scale_breaks"])
+    padding = {11: 0.25, 13: 0.3, 15: 0.35, 17: 0.4}
+    pad = padding[breaks]
+#    color = "#000000"
+#    label = ["breaks: %s\npad: %s" % (breaks, pad), ]
+#    plot += ggplot.geom_text(label=label, x=[left1, left1 + 1],
+#                             y=[top1 - 2, top1 - 3], color=color)
+    for x in batch["symbols"]:
+        if x in "CD":
+            color = colors[x]
+            plot += ggplot.geom_text(label=[x.lower(), ], x=[left0, left0 + 1],
+                                     y=[top0, top0 - 1], color=color,
+                                     family="EotE Symbol")
+            left0 += pad
+        else:
+            color = colors[x]
+            plot += ggplot.geom_text(label=[x.lower(), ], x=[left1, left1 + 1],
+                                     y=[top1, top1 - 1], color=color,
+                                     family="EotE Symbol")
+            left1 += pad
+    return plot

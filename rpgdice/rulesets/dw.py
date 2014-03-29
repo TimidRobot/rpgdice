@@ -8,6 +8,10 @@ ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
 title = "Dungeon World"
+outcomes_label = "Result"
+variables = xrange(-3, 4)  # Ability modifier range
+variables_label = "Ability Score"
+# Batches
 batches[0] = dict()
 batches[0]["file_suffix"] = "_success"
 batches[0]["graph_type"] = "bars"
@@ -29,9 +33,6 @@ batches[2]["scale_labels"] = batches[2]["scale_breaks"]
 batches[2]["title"] = "%s\nRaw Results" % title
 abilities = {-3: " 1-3 ", -2: " 4-5 ", -1: " 6-8 ", 0: " 9-12", 1: "13-15",
              2: "16-17", 3: "18   "}
-outcomes_label = "Result"
-variables = xrange(-3, 4)  # Ability modifier range
-variables_label = "Ability Score"
 
 
 def setup(subparser):

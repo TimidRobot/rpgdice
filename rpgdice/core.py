@@ -93,7 +93,7 @@ def main():
             print
 
         # Graph Defaults
-        graph = dict()
+        conf = dict()
         # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
         colors_upper = ["#006666", "#003399", "#0000cc", "#0000ff"]
@@ -105,53 +105,55 @@ def main():
         else:
             lower_slice = ((color_count - 1) / 2) * -1
             upper_slice = (color_count + 1) / 2
-        graph["color_list"] = (colors_lower[lower_slice:] + colors_mid +
+        conf["color_list"] = (colors_lower[lower_slice:] + colors_mid +
                                colors_upper[0:upper_slice])
 
-        # Graph from batch
+        # conf from batch
         batch_items = ("color_list", "graph_type", "limits", "scale_breaks",
                        "scale_labels", "title", "variables_label")
         for item in batch_items:
             try:
-                graph[item] = batch[item]
+                conf[item] = batch[item]
             except:
                 try:
-                    graph[item] = getattr(rulemod, item)
+                    conf[item] = getattr(rulemod, item)
                 except:
-                    if item not in graph:
-                        graph[item] = None
+                    if item not in conf:
+                        conf[item] = None
         if args.debug:
-            print "DEBUG: graph:"
-            pprint(graph)
+            print "DEBUG: conf:"
+            pprint(conf)
             print
 
         # Create plot
         if args.graph:
             plot = (ggplot.ggplot(ggplot.aes(x=rulemod.outcomes_label,
                                              y="Percent",
-                                             color=graph["variables_label"]),
+                                             color=conf["variables_label"]),
                                   data=plot_data) +
-                    ggplot.ggtitle(graph["title"]) +
-                    ggplot.scale_x_discrete(breaks=graph["scale_breaks"],
-                                            labels=graph["scale_labels"]) +
-                    ggplot.theme_seaborn() +
-                    ggplot.scale_colour_manual(values=graph["color_list"])
+                    ggplot.ggtitle(conf["title"]) +
+                    ggplot.scale_x_discrete(breaks=conf["scale_breaks"],
+                                            labels=conf["scale_labels"]) +
+                    ggplot.theme_gray() +
+                    ggplot.scale_colour_manual(values=conf["color_list"])
                     )
-            if graph["limits"]:
-                plot += ggplot.scale_y_continuous(limits=graph["limits"])
-            if graph["graph_type"] == "bars":
+            if conf["limits"]:
+                plot += ggplot.ylim(conf["limits"][0], conf["limits"][1])
+            if conf["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
             else:
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
             plot.rcParams["font.family"] = "monospace"
+            if hasattr(rulemod, "update_plot"):
+                plot = rulemod.update_plot(i, batch, conf, plot)
             if args.dumpsave:
                 filename = "/dev/null"
             else:
                 suffix = str()
                 if "file_suffix" in batch:
                     suffix = batch["file_suffix"]
-                filename = "%s%s%s.png" % (args.ruleset, i, suffix)
-            ggplot.ggsave(filename, plot, format="png", dpi=75)
+                filename = "%s%02d%s.png" % (args.ruleset, i, suffix)
+            ggplot.ggsave(filename, plot, format="png", dpi=300)
 
     return 0
