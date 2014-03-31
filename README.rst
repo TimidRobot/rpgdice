@@ -11,8 +11,12 @@ Rulesets
 
 It currently contains rulesets for:
 
-- Dungeon World
-- Star Wars: Edge of the Empire
+- `Dungeon World`_
+- `Star Wars: Edge of the Empire`_
+
+.. _`Dungeon World`: http://www.dungeon-world.com/
+.. _`Star Wars: Edge of the Empire`:
+   http://www.fantasyflightgames.com/edge_minisite.asp?eidm=232
 
 
 Requirements
