@@ -10,7 +10,6 @@ import sys
 import ggplot
 import pandas
 # RPG Dice
-from .rulesets import crypto
 from .rulesets import dw
 from .rulesets import sweote
 
