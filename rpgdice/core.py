@@ -136,14 +136,25 @@ def main():
                     ggplot.theme_gray() +
                     ggplot.scale_colour_manual(values=conf["color_list"])
                     )
+            plot.rcParams["font.family"] = "monospace"
             if conf["limits"]:
                 plot += ggplot.ylim(conf["limits"][0], conf["limits"][1])
             if conf["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
+                text_data = plot_data[plot_data["Count"] > 0]
+                text_data.index = range(0, len(text_data))
+                outcomes = dict(text_data[rulemod.outcomes_label])
+                percents = dict(text_data["Percent"])
+                for k in outcomes:
+                    percent = "%4.1f%%" % percents[k]
+                    x = outcomes[k]
+                    y = percents[k] + 4
+                    color = conf["color_list"][k]
+                    plot += ggplot.geom_text(label=[percent, ], x=[x, x + 1],
+                         y=[y, y - 1], color=color)
             else:
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
-            plot.rcParams["font.family"] = "monospace"
             if hasattr(rulemod, "update_plot"):
                 plot = rulemod.update_plot(i, batch, conf, plot)
             if args.dumpsave:
