@@ -4,6 +4,8 @@ rpgdice
 ``rpgdice`` simulates dice rolls and creates graphs showing the probability of
 the different outcomes.
 
+**Write-up with graphs coming soon!**
+
 Rulesets
 --------
 
@@ -21,7 +23,7 @@ Requirements
 3. virtualenv (``pip install virtualenv``)
 4. virtualenvwrapper (``pip install virtualenvwrapper``)
 5. virtual environment for rpgdice (``mkvirtualenv rpgdice``)
-5. ggplot (**install_requirements.sh**)
+6. ggplot (bundled **install_requirements.sh**)
 
 .. _`Installtion • homebrew Wiki`:
    https://github.com/Homebrew/homebrew/wiki/Installation
