@@ -7,8 +7,8 @@ the different outcomes.
 Graphs
 ------
 
-- |dwgraph|_
-- sweote **coming soon!**
+- ``dw``: |dwgraph|_
+- ``sweote``: **coming soon!**
 
 .. |dwgraph| replace::  **fsck me: Dungeon World Dice Probabilities**
 .. _dwgraph:
@@ -19,8 +19,8 @@ Rulesets
 
 It currently contains rulesets for:
 
-- `Dungeon World`_
-- `Star Wars: Edge of the Empire`_
+- ``dw``: `Dungeon World`_
+- ``sweote``: `Star Wars: Edge of the Empire`_
 
 .. _`Dungeon World`: http://www.dungeon-world.com/
 .. _`Star Wars: Edge of the Empire`:
