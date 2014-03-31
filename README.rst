@@ -4,7 +4,15 @@ rpgdice
 ``rpgdice`` simulates dice rolls and creates graphs showing the probability of
 the different outcomes.
 
-**Write-up with graphs coming soon!**
+Graphs
+------
+
+- |dwgraph|_
+- sweote **coming soon!**
+
+.. |dwgraph| replace::  **fsck me: Dungeon World Dice Probabilities**
+.. _dwgraph:
+   http://fsckme.zehta.me/2014/03/dungeon-world-dice-probabilities.html
 
 Rulesets
 --------
@@ -27,13 +35,13 @@ Requirements
 3. virtualenv (``pip install virtualenv``)
 4. virtualenvwrapper (``pip install virtualenvwrapper``)
 5. virtual environment for rpgdice (``mkvirtualenv rpgdice``)
-6. ggplot (bundled **install_requirements.sh**)
+6. `ggplot`_ (**use install_requirements.sh**)
 
 .. _`Installtion • homebrew Wiki`:
    https://github.com/Homebrew/homebrew/wiki/Installation
 .. _`Installation — pip documentation`:
    http://pip.readthedocs.org/en/latest/installing.html
-.. _`yhat/ggplot · GitHub`: https://github.com/yhat/ggplot/
+.. _`ggplot`: https://github.com/yhat/ggplot/
 
 
 Research
