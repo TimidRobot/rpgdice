@@ -90,6 +90,7 @@ def main():
     for gkey in rulemod.graphs:
         # Graph Defaults
         graph_conf = conf.copy()
+        graph_conf["file_prefix"] = "%s%02d" % (args.ruleset, gkey)
         graph_conf["file_suffix"] = str()
         # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
@@ -172,8 +173,8 @@ def main():
             if args.dumpsave:
                 filename = "/dev/null"
             else:
-                filename = "%s%02d%s.png" % (args.ruleset, gkey,
-                                             graph_conf["file_suffix"])
+                filename = "%s%s.png" % (graph_conf["file_prefix"],
+                                         graph_conf["file_suffix"])
             ggplot.ggsave(filename, plot, format="png", dpi=300)
 
     return 0
