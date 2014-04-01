@@ -46,7 +46,7 @@ def parser_setup():
     argparser.add_argument("--nograph", action="store_false", dest="graph")
     # Sub-parser for modules to register themselves
     subparser = argparser.add_subparsers(title="Ruleset subcommands:",
-                                         dest="ruleset", metavar="RULESET" )
+                                         dest="ruleset", metavar="RULESET")
     return (argparser, subparser)
 
 
@@ -85,14 +85,12 @@ def main():
         except:
             pass
 
-
-    columns = ("Batch", conf["vlab"], conf["xlab"], "Count", conf["ylab"])
+    columns = ("Graph", conf["vlab"], conf["xlab"], "Count", conf["ylab"])
     data = pandas.DataFrame.from_records(results, columns=columns)
-    for i in rulemod.batches:
-        batch = rulemod.batches[i]
-
+    for gkey in rulemod.graphs:
         # Graph Defaults
-        batch_conf = conf.copy()
+        graph_conf = conf.copy()
+        graph_conf["file_suffix"] = str()
         # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
         colors_upper = ["#006666", "#003399", "#0000cc", "#0000ff"]
@@ -104,81 +102,78 @@ def main():
         else:
             lower_slice = ((color_count - 1) / 2) * -1
             upper_slice = (color_count + 1) / 2
-        batch_conf["color_list"] = (colors_lower[lower_slice:] + colors_mid +
-                               colors_upper[0:upper_slice])
+        graph_conf["color_list"] = (colors_lower[lower_slice:] + colors_mid +
+                                    colors_upper[0:upper_slice])
 
-        # batch_conf from batch
-        batch_items = ("color_list", "graph_type", "limits", "x_breaks",
-                       "x_labels", "title", "vlab", "xlab", "ylab")
-        for item in batch_items:
+        # graph_conf from graph
+        graph_items = ("color_list", "file_suffix", "graph_type", "limits",
+                       "x_breaks", "x_labels", "title", "vlab", "xlab", "ylab")
+        for item in graph_items:
             try:
-                batch_conf[item] = batch[item]
+                graph_conf[item] = rulemod.graphs[gkey][item]
             except:
                 try:
-                    batch_conf[item] = getattr(rulemod, item)
+                    graph_conf[item] = getattr(rulemod, item)
                 except:
-                    if item not in batch_conf:
-                        batch_conf[item] = None
+                    if item not in graph_conf:
+                        graph_conf[item] = None
         if args.debug:
-            print "DEBUG: batch_conf:"
-            pprint(batch_conf)
+            print "DEBUG: graph_conf:"
+            pprint(graph_conf)
             print
 
         # plot_data
         plot_data = data.copy()
-        plot_data = plot_data[plot_data["Batch"] == i]
-        plot_data.rename(columns={conf["vlab"]: batch_conf["vlab"],
-                                  conf["xlab"]: batch_conf["xlab"],
-                                  conf["ylab"]: batch_conf["ylab"]},
-                                  inplace=True)
+        plot_data = plot_data[plot_data["Graph"] == gkey]
+        plot_data.rename(columns={conf["vlab"]: graph_conf["vlab"],
+                                  conf["xlab"]: graph_conf["xlab"],
+                                  conf["ylab"]: graph_conf["ylab"]},
+                         inplace=True)
         plot_data.index = range(1, len(plot_data) + 1)
         if args.debug:
             print "DEBUG: plot_data:"
             pprint(plot_data)
             print
 
-
         # Create plot
         if args.graph:
-            plot = (ggplot.ggplot(ggplot.aes(x=batch_conf["xlab"],
-                                             y=batch_conf["ylab"],
-                                             color=batch_conf["vlab"]),
+            plot = (ggplot.ggplot(ggplot.aes(x=graph_conf["xlab"],
+                                             y=graph_conf["ylab"],
+                                             color=graph_conf["vlab"]),
                                   data=plot_data) +
-                    ggplot.scale_x_discrete(breaks=batch_conf["x_breaks"],
-                                            labels=batch_conf["x_labels"]) +
-                    ggplot.ggtitle(batch_conf["title"]) +
+                    ggplot.scale_x_discrete(breaks=graph_conf["x_breaks"],
+                                            labels=graph_conf["x_labels"]) +
+                    ggplot.ggtitle(graph_conf["title"]) +
                     ggplot.theme_gray() +
-                    ggplot.scale_colour_manual(values=batch_conf["color_list"])
+                    ggplot.scale_colour_manual(values=graph_conf["color_list"])
                     )
             plot.rcParams["font.family"] = "monospace"
-            if batch_conf["limits"]:
-                plot += ggplot.ylim(batch_conf["limits"][0],
-                                    batch_conf["limits"][1])
-            if batch_conf["graph_type"] == "bars":
+            if graph_conf["limits"]:
+                plot += ggplot.ylim(graph_conf["limits"][0],
+                                    graph_conf["limits"][1])
+            if graph_conf["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
                 text_data = plot_data[plot_data["Count"] > 0]
                 text_data.index = range(0, len(text_data))
-                outcomes = dict(text_data[batch_conf["xlab"]])
-                percents = dict(text_data[batch_conf["ylab"]])
+                outcomes = dict(text_data[graph_conf["xlab"]])
+                percents = dict(text_data[graph_conf["ylab"]])
                 for k in outcomes:
                     percent = "%4.1f%%" % percents[k]
                     x = outcomes[k]
                     y = percents[k] + 4
-                    color = batch_conf["color_list"][k]
+                    color = graph_conf["color_list"][k]
                     plot += ggplot.geom_text(label=[percent, ], x=[x, x + 1],
-                         y=[y, y - 1], color=color)
+                                             y=[y, y - 1], color=color)
             else:
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
             if hasattr(rulemod, "update_plot"):
-                plot = rulemod.update_plot(i, batch, batch_conf, plot)
+                plot = rulemod.update_plot(gkey, graph_conf, plot)
             if args.dumpsave:
                 filename = "/dev/null"
             else:
-                suffix = str()
-                if "file_suffix" in batch:
-                    suffix = batch["file_suffix"]
-                filename = "%s%02d%s.png" % (args.ruleset, i, suffix)
+                filename = "%s%02d%s.png" % (args.ruleset, gkey,
+                                             graph_conf["file_suffix"])
             ggplot.ggsave(filename, plot, format="png", dpi=300)
 
     return 0

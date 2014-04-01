@@ -3,7 +3,7 @@
 import os.path
 
 args = None
-batches = dict()
+graphs = dict()
 ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
@@ -11,35 +11,35 @@ title = "Dungeon World"
 xlab = "Outcome (2d6+MOD)"
 variables = xrange(-3, 4)  # Ability modifier range
 vlab = "Ability Score"
-# Batches
-batches[0] = dict()
-batches[0]["file_suffix"] = "_success"
-batches[0]["graph_type"] = "bars"
-batches[0]["limits"] = (0, 100)
-batches[0]["title"] = "%s\nChance of Any Success" % title
-batches[0]["x_breaks"] = [-4, ] + range(-3, 4)
-batches[0]["x_labels"] = [" ", ] + range(-3, 4)
-batches[0]["xlab"] = "Modifier"
-batches[1] = dict()
-batches[1]["file_suffix"] = "_simplified"
-batches[1]["limits"] = (0, 90)
-batches[1]["title"] = "%s\nSimplified Results" % title
-batches[1]["x_breaks"] = [6, 8, 10]
-batches[1]["x_labels"] = ["6 or less\nFailure", "7 to 9\nPartial Success",
-                          "10 or more\nSuccess"]
-batches[2] = dict()
-batches[2]["file_suffix"] = "_raw"
-batches[2]["limits"] = (2, 18)
-batches[2]["x_breaks"] = range(-1, 16)
-batches[2]["x_labels"] = batches[2]["x_breaks"]
-batches[2]["title"] = "%s\nRaw Results" % title
+# Graphs
+graphs[0] = dict()
+graphs[0]["file_suffix"] = "_success"
+graphs[0]["graph_type"] = "bars"
+graphs[0]["limits"] = (0, 100)
+graphs[0]["title"] = "%s\nChance of Any Success" % title
+graphs[0]["x_breaks"] = [-4, ] + range(-3, 4)
+graphs[0]["x_labels"] = [" ", ] + range(-3, 4)
+graphs[0]["xlab"] = "Modifier"
+graphs[1] = dict()
+graphs[1]["file_suffix"] = "_simplified"
+graphs[1]["limits"] = (0, 90)
+graphs[1]["title"] = "%s\nSimplified Results" % title
+graphs[1]["x_breaks"] = [6, 8, 10]
+graphs[1]["x_labels"] = ["6 or less\nFailure", "7 to 9\nPartial Success",
+                         "10 or more\nSuccess"]
+graphs[2] = dict()
+graphs[2]["file_suffix"] = "_raw"
+graphs[2]["limits"] = (2, 18)
+graphs[2]["x_breaks"] = range(-1, 16)
+graphs[2]["x_labels"] = graphs[2]["x_breaks"]
+graphs[2]["title"] = "%s\nRaw Results" % title
 abilities = {-3: " 1-3 ", -2: " 4-5 ", -1: " 6-8 ", 0: " 9-12", 1: "13-15",
              2: "16-17", 3: "18   "}
 
 
 def setup(subparser):
     """Set up the sub-command parser"""
-    subcommand = subparser.add_parser(ruleset, help="%s ruleset" % title)
+    subparser.add_parser(ruleset, help="%s ruleset" % title)
 
 
 def prepare(parent_args, parent_srand):
@@ -51,27 +51,27 @@ def prepare(parent_args, parent_srand):
 def simulate_rolls(variable):
     ability_mod = variable
     outcomes = dict()
-    for i in batches:
-        outcomes[i] = dict()
+    for gkey in graphs:
+        outcomes[gkey] = dict()
     # simulate rolls
     for roll in xrange(args.rolls):
         results = dict()
-        for i in batches:
-            results[i] = 0
+        for gkey in graphs:
+            results[gkey] = 0
         # Simple 2d6
         pips = srand.randint(1, 6) + srand.randint(1, 6)
-        for i in batches:
-                results[i] = pips + ability_mod
+        for gkey in graphs:
+                results[gkey] = pips + ability_mod
         # Update outcomes
-        for i in batches:
-            result = results[i]
-            if i == 0:
+        for gkey in graphs:
+            result = results[gkey]
+            if gkey == 0:
                 # Massage data for successes
                 if result > 6:
                     result = ability_mod
                 else:
                     continue
-            elif i == 1:
+            elif gkey == 1:
                 # Massage data for simplified
                 if result <= 6:
                     result = 6
@@ -80,15 +80,15 @@ def simulate_rolls(variable):
                 else:
                     result = 10
             # Update
-            if result not in outcomes[i]:
-                outcomes[i][result] = 1
+            if result not in outcomes[gkey]:
+                outcomes[gkey][result] = 1
             else:
-                outcomes[i][result] += 1
+                outcomes[gkey][result] += 1
     # Organize data
     data = list()
-    for i in batches:
-        for result in outcomes[i]:
-            count = outcomes[i][result]
+    for gkey in graphs:
+        for result in outcomes[gkey]:
+            count = outcomes[gkey][result]
             percent = round((float(count) / float(args.rolls)) * 100, 1)
             if ability_mod > -1:
                 ability_mod_label = "%s  +%s MOD" % (abilities[ability_mod],
@@ -96,7 +96,7 @@ def simulate_rolls(variable):
             else:
                 ability_mod_label = "%s  %s MOD" % (abilities[ability_mod],
                                                     ability_mod)
-            data.append((i, ability_mod_label, result, count, percent))
-            if i == 0:
-                data.append((i, ability_mod_label, result, 0, -1.0))
+            data.append((gkey, ability_mod_label, result, count, percent))
+            if gkey == 0:
+                data.append((gkey, ability_mod_label, result, 0, -1.0))
     return sorted(data)
