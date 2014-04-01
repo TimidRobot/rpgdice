@@ -77,22 +77,22 @@ def main():
         pprint(results)
         print
 
-    columns = ("Batch", rulemod.variables_label, rulemod.outcomes_label,
-               "Count", "Percent")
+    conf = dict()
+    conf = {"vlab": "Variables", "xlab": "Outcome", "ylab": "Probability %"}
+    for item in conf:
+        try:
+            conf[item] = getattr(rulemod, item)
+        except:
+            pass
+
+
+    columns = ("Batch", conf["vlab"], conf["xlab"], "Count", conf["ylab"])
     data = pandas.DataFrame.from_records(results, columns=columns)
     for i in rulemod.batches:
         batch = rulemod.batches[i]
 
-        # plot_data
-        plot_data = data[data["Batch"] == i]
-        plot_data.index = range(1, len(plot_data) + 1)
-        if args.debug:
-            print "DEBUG: plot_data:"
-            pprint(plot_data)
-            print
-
         # Graph Defaults
-        conf = dict()
+        batch_conf = conf.copy()
         # colors
         colors_lower = ["#ff0000", "#cc0000", "#993300", "#666600"]
         colors_upper = ["#006666", "#003399", "#0000cc", "#0000ff"]
@@ -104,59 +104,74 @@ def main():
         else:
             lower_slice = ((color_count - 1) / 2) * -1
             upper_slice = (color_count + 1) / 2
-        conf["color_list"] = (colors_lower[lower_slice:] + colors_mid +
+        batch_conf["color_list"] = (colors_lower[lower_slice:] + colors_mid +
                                colors_upper[0:upper_slice])
 
-        # conf from batch
-        batch_items = ("color_list", "graph_type", "limits", "scale_breaks",
-                       "scale_labels", "title", "variables_label")
+        # batch_conf from batch
+        batch_items = ("color_list", "graph_type", "limits", "x_breaks",
+                       "x_labels", "title", "vlab", "xlab", "ylab")
         for item in batch_items:
             try:
-                conf[item] = batch[item]
+                batch_conf[item] = batch[item]
             except:
                 try:
-                    conf[item] = getattr(rulemod, item)
+                    batch_conf[item] = getattr(rulemod, item)
                 except:
-                    if item not in conf:
-                        conf[item] = None
+                    if item not in batch_conf:
+                        batch_conf[item] = None
         if args.debug:
-            print "DEBUG: conf:"
-            pprint(conf)
+            print "DEBUG: batch_conf:"
+            pprint(batch_conf)
             print
+
+        # plot_data
+        plot_data = data.copy()
+        plot_data = plot_data[plot_data["Batch"] == i]
+        plot_data.rename(columns={conf["vlab"]: batch_conf["vlab"],
+                                  conf["xlab"]: batch_conf["xlab"],
+                                  conf["ylab"]: batch_conf["ylab"]},
+                                  inplace=True)
+        plot_data.index = range(1, len(plot_data) + 1)
+        if args.debug:
+            print "DEBUG: plot_data:"
+            pprint(plot_data)
+            print
+
 
         # Create plot
         if args.graph:
-            plot = (ggplot.ggplot(ggplot.aes(x=rulemod.outcomes_label,
-                                             y="Percent",
-                                             color=conf["variables_label"]),
+            plot = (ggplot.ggplot(ggplot.aes(x=batch_conf["xlab"],
+                                             y=batch_conf["ylab"],
+                                             color=batch_conf["vlab"]),
                                   data=plot_data) +
-                    ggplot.ggtitle(conf["title"]) +
-                    ggplot.scale_x_discrete(breaks=conf["scale_breaks"],
-                                            labels=conf["scale_labels"]) +
+                    ggplot.scale_x_discrete(breaks=batch_conf["x_breaks"],
+                                            labels=batch_conf["x_labels"]) +
+                    ggplot.ggtitle(batch_conf["title"]) +
                     ggplot.theme_gray() +
-                    ggplot.scale_colour_manual(values=conf["color_list"])
+                    ggplot.scale_colour_manual(values=batch_conf["color_list"])
                     )
             plot.rcParams["font.family"] = "monospace"
-            if conf["limits"]:
-                plot += ggplot.ylim(conf["limits"][0], conf["limits"][1])
-            if conf["graph_type"] == "bars":
+            if batch_conf["limits"]:
+                plot += ggplot.ylim(batch_conf["limits"][0],
+                                    batch_conf["limits"][1])
+            if batch_conf["graph_type"] == "bars":
                 plot += ggplot.geom_line(size=20)
                 text_data = plot_data[plot_data["Count"] > 0]
                 text_data.index = range(0, len(text_data))
-                outcomes = dict(text_data[rulemod.outcomes_label])
-                percents = dict(text_data["Percent"])
+                outcomes = dict(text_data[batch_conf["xlab"]])
+                percents = dict(text_data[batch_conf["ylab"]])
                 for k in outcomes:
                     percent = "%4.1f%%" % percents[k]
                     x = outcomes[k]
                     y = percents[k] + 4
-                    color = conf["color_list"][k]
+                    color = batch_conf["color_list"][k]
                     plot += ggplot.geom_text(label=[percent, ], x=[x, x + 1],
                          y=[y, y - 1], color=color)
             else:
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
             if hasattr(rulemod, "update_plot"):
-                plot = rulemod.update_plot(i, batch, conf, plot)
+                plot = rulemod.update_plot(i, batch, batch_conf, plot)
             if args.dumpsave:
                 filename = "/dev/null"
             else:

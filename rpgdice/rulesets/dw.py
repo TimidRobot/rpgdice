@@ -8,28 +8,30 @@ ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
 title = "Dungeon World"
-outcomes_label = "Result"
+xlab = "Outcome (2d6+MOD)"
 variables = xrange(-3, 4)  # Ability modifier range
-variables_label = "Ability Score"
+vlab = "Ability Score"
 # Batches
 batches[0] = dict()
 batches[0]["file_suffix"] = "_success"
 batches[0]["graph_type"] = "bars"
 batches[0]["limits"] = (0, 100)
-batches[0]["scale_breaks"] = [-4, ] + range(-3, 4)
-batches[0]["scale_labels"] = [" ", ] + range(-3, 4)
 batches[0]["title"] = "%s\nChance of Any Success" % title
+batches[0]["x_breaks"] = [-4, ] + range(-3, 4)
+batches[0]["x_labels"] = [" ", ] + range(-3, 4)
+batches[0]["xlab"] = "Modifier"
 batches[1] = dict()
 batches[1]["file_suffix"] = "_simplified"
 batches[1]["limits"] = (0, 90)
-batches[1]["scale_breaks"] = [6, 8, 10]
-batches[1]["scale_labels"] = ["6 or less", "7-9", "10 or more"]
 batches[1]["title"] = "%s\nSimplified Results" % title
+batches[1]["x_breaks"] = [6, 8, 10]
+batches[1]["x_labels"] = ["6 or less\nFailure", "7 to 9\nPartial Success",
+                          "10 or more\nSuccess"]
 batches[2] = dict()
 batches[2]["file_suffix"] = "_raw"
 batches[2]["limits"] = (2, 18)
-batches[2]["scale_breaks"] = range(-1, 16)
-batches[2]["scale_labels"] = batches[2]["scale_breaks"]
+batches[2]["x_breaks"] = range(-1, 16)
+batches[2]["x_labels"] = batches[2]["x_breaks"]
 batches[2]["title"] = "%s\nRaw Results" % title
 abilities = {-3: " 1-3 ", -2: " 4-5 ", -1: " 6-8 ", 0: " 9-12", 1: "13-15",
              2: "16-17", 3: "18   "}

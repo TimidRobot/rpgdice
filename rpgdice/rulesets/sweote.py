@@ -10,9 +10,8 @@ ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
 title = "Star Wars: Edge of the Empire"
-variables_label = "Symbol"
 limits = (-1, 35)
-outcomes_label = "Outcomes"
+vlab = "Symbol"
 symbols = { "fs": ("1 Failure", "2 Success"), "d": ("5 Despair", ),
             "ta": ("3 Threat", "4 Advantage"), "t": ("6 Triumphs", )}
 # (failure, threat, despair)
@@ -69,8 +68,8 @@ for variable in dice_combos:
     batch["title"] = "%s\n%s" % (title, desc)
     range_bottom = (-2 * dice_chal) + (-2 * dice_diff)
     range_top = (2 * dice_prof) + (2 * dice_abil) + 1
-    batch["scale_breaks"] = [range_bottom - 0.5, ] + range(range_bottom, range_top) + [range_top - 0.5, ]
-    batch["scale_labels"] = [" ", ] + [abs(x) for x in range(range_bottom, range_top)] + [" ", ]
+    batch["x_breaks"] = [range_bottom - 0.5, ] + range(range_bottom, range_top) + [range_top - 0.5, ]
+    batch["x_labels"] = [" ", ] + [abs(x) for x in range(range_bottom, range_top)] + [" ", ]
 
 
 def setup(subparser):
@@ -151,14 +150,14 @@ def simulate_rolls(variable):
     return sorted(data)
 
 
-def update_plot(i, batch, conf, plot):
+def update_plot(i, batch, batch_conf, plot):
     """Add dice symbos to plot."""
-    top0 = conf["limits"][1] - 1
+    top0 = batch_conf["limits"][1] - 1
     top1 = top0 - 1.2
-    left0 = conf["scale_breaks"][0] + 1
+    left0 = batch_conf["x_breaks"][0] + 1
     left1 = left0
     colors = {"c": "#ff0000", "d": "#4B0082", "C": "#ffff00", "D": "#008000"}
-    breaks = len(conf["scale_breaks"])
+    breaks = len(batch_conf["x_breaks"])
     padding = {11: 0.25, 13: 0.3, 15: 0.35, 17: 0.4}
     pad = padding[breaks]
 #    color = "#000000"
