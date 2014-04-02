@@ -8,11 +8,15 @@ Graphs
 ------
 
 - ``dw``: |dwgraph|_
-- ``sweote``: **coming soon!**
+- ``sweote``: |swgraph|_
 
 .. |dwgraph| replace::  **fsck me: Dungeon World Dice Probabilities**
 .. _dwgraph:
    http://fsckme.zehta.me/2014/03/dungeon-world-dice-probabilities.html
+.. |swgraph| replace::
+   **fsck me: Star Wars: Edge of the Empire Dice Probabilities**
+.. _swgraph:
+   http://fsckme.zehta.me/2014/04/star-wars-edge-of-empire-dice.html 
 
 Rulesets
 --------
