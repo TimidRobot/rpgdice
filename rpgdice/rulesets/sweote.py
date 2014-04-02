@@ -10,7 +10,7 @@ ruleset = os.path.basename(__file__).split(".")[0]
 srand = None
 
 title = "Star Wars: Edge of the Empire"
-limits = (-1, 35)
+limits = (-1, 30)
 vlab = "Symbol"
 buckets = {"fs": ("1 Failure", "2 Success"), "d": ("5 Despair", ),
            "ta": ("3 Threat", "4 Advantage"), "t": ("6 Triumphs", )}
@@ -42,18 +42,45 @@ dice_combos = {0: (0, 2, 0, 0, 2, 0, "Unskilled PC vs Average Difficulty"),
                6: (0, 2, 0, 3, 1, 1, "Pro PC vs Average Difficulty"),
                7: (0, 3, 0, 3, 1, 1, "Pro PC vs Hard Difficulty"),
                8: (2, 1, 1, 3, 1, 1, "Pro PC vs Advesary NPC")}
+custom_combo = False
 
 
 def setup(subparser):
+    def intreg(num):
+        global custom_combo
+        num = int(num)
+        custom_combo = True
+        return num
     """Set up the sub-command parser"""
-    subparser.add_parser(ruleset, help="%s ruleset" % title)
+    sub = subparser.add_parser(ruleset, help="%s ruleset" % title)
+    sub.add_argument("-c", "--challenge-dice", default=0, type=intreg,
+                     metavar="INT", dest="dice_chall")
+    sub.add_argument("-d", "--difficulty-dice",  default=0, type=intreg,
+                     metavar="INT",  dest="dice_diff")
+    sub.add_argument("-s", "--setback-dice",  default=0, type=intreg,
+                     metavar="INT", dest="dice_setb")
+    sub.add_argument("-p", "--proficiency-dice",  default=0, type=intreg,
+                     metavar="INT", dest="dice_prof")
+    sub.add_argument("-a", "--ability-dice",  default=0, type=intreg,
+                     metavar="INT", dest="dice_abil")
+    sub.add_argument("-b", "--boost-dice",  default=0, type=intreg,
+                     metavar="INT", dest="dice_boost")
+    sub.add_argument("-t", "--title",  default="Custom Graph",
+                     metavar="STRING", dest="desc")
+    sub.add_argument("-l", "--limit",  metavar="INT", type=int)
 
 
 def prepare(parent_args, parent_srand):
-    global args, graphs, srand, variables
+    global args, dice_combos, graphs, srand, variables
     args = parent_args
     srand = parent_srand
-    variables = dice_combos.keys()
+    if custom_combo:
+        dice_combos = {0: (args.dice_chall, args.dice_diff, args.dice_setb,
+                           args.dice_prof, args.dice_abil, args.dice_boost,
+                           args.desc)}
+        variables = (0, )
+    else:
+        variables = dice_combos.keys()
     # Graphs
     for variable in variables:
         graphs[variable] = dict()
@@ -62,7 +89,6 @@ def prepare(parent_args, parent_srand):
         dice_chall, dice_diff, dice_setb = dice_combos[variable][0:3]
         dice_prof, dice_abil, dice_boost = dice_combos[variable][3:6]
         desc = dice_combos[variable][-1]
-        dice = str()
         graph["dice_key"] = str()
         if dice_chall:
             graph["dice_key"] = "%s%s" % (graph["dice_key"], "c" * dice_chall)
@@ -80,14 +106,10 @@ def prepare(parent_args, parent_srand):
             graph["dice_key"] = "%s%s" % (graph["dice_key"], "B" * dice_boost)
         graph["file_suffix"] = "_%s" % desc.lower().replace(" ", "_")
         graph["title"] = "%s\n%s" % (title, desc)
-        range_bottom = (-2 * dice_chall) + (-2 * dice_diff) - dice_setb
-        range_top = (2 * dice_prof) + (2 * dice_abil) + dice_boost + 1
-        graph["x_breaks"] = ([range_bottom - 0.5, ] +
-                             range(range_bottom, range_top) +
-                             [range_top - 0.5, ])
-        graph["x_labels"] = ([" ", ] +
-                             [abs(x) for x in range(range_bottom, range_top)] +
-                             [" ", ])
+        if args.limit:
+            graph["limits"] = (limits[0], args.limit)
+    if custom_combo:
+        graphs[0]["file_prefix"] = "%s__" % ruleset
 
 
 def simulate_rolls(variable):
@@ -164,23 +186,33 @@ def simulate_rolls(variable):
             for result in outcomes[symbol]:
                 count = outcomes[symbol][result]
                 percent = round((float(count) / float(args.rolls)) * 100, 1)
-                data.append((variable, symbol, result, count, percent))
+                # Round up miniscule percentages for Despair and Triumph
+                if percent < 0.5 and (symbol.endswith("Despair") or
+                                      symbol.endswith("Triumphs")):
+                    percent = 0.5
+                # Ignore miniscule percentages
+                if percent >= 0.5:
+                    data.append((variable, symbol, result, count, percent))
     return sorted(data)
 
 
-def update_plot(gkey, graph_conf, plot):
-    """Add rolled dice symbols to plot."""
+def update_plot(gkey, graph_conf, plot, plot_data):
+    """Determine x axis breaks and add rolled dice symbols to plot."""
+    # Determine x axis breaks
+    x_breaks = plot_data.copy()
+    x_breaks = x_breaks[graph_conf["xlab"]].drop_duplicates().tolist()
+    x_breaks.sort()
+    x_labels = [" ", ] + [abs(x) for x in x_breaks] + [" ", ]
+    x_breaks = [x_breaks[0] - 0.5, ] + x_breaks + [x_breaks[-1] + 0.5, ]
+    plot += ggplot.scale_x_discrete(breaks=x_breaks, labels=x_labels)
+    # Add rolled dice symbols
     top0 = graph_conf["limits"][1] - 1
     top1 = top0 - 1.2
-    left0 = graph_conf["x_breaks"][0] + 1
+    left0 = x_breaks[1]
     left1 = left0
     colors = {"b": "#000000", "B": "#87CEFA", "c": "#ff0000", "d": "#4B0082",
               "C": "#ffff00", "D": "#008000"}
-    pad = len(graph_conf["x_breaks"]) * 0.0235
-#    color = "#000000"
-#    label = ["breaks: %s\npad: %s" % (breaks, pad), ]
-#    plot += ggplot.geom_text(label=label, x=[left1, left1 + 1],
-#                             y=[top1 - 2, top1 - 3], color=color)
+    pad = len(x_breaks) * 0.0235
     for letter in graphs[gkey]["dice_key"]:
         if letter in "CDB":
             color = colors[letter]
