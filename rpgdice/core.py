@@ -109,8 +109,9 @@ def main():
                                     colors_upper[0:upper_slice])
 
         # graph_conf from graph
-        graph_items = ("color_list", "file_suffix", "graph_type", "limits",
-                       "x_breaks", "x_labels", "title", "vlab", "xlab", "ylab")
+        graph_items = ("color_list", "file_prefix", "file_suffix",
+                       "graph_type", "limits", "x_breaks", "x_labels",
+                       "title", "vlab", "xlab", "ylab")
         for item in graph_items:
             try:
                 graph_conf[item] = rulemod.graphs[gkey][item]
@@ -144,13 +145,14 @@ def main():
                                              y=graph_conf["ylab"],
                                              color=graph_conf["vlab"]),
                                   data=plot_data) +
-                    ggplot.scale_x_discrete(breaks=graph_conf["x_breaks"],
-                                            labels=graph_conf["x_labels"]) +
                     ggplot.ggtitle(graph_conf["title"]) +
                     ggplot.theme_gray() +
                     ggplot.scale_colour_manual(values=graph_conf["color_list"])
                     )
             plot.rcParams["font.family"] = "monospace"
+            if graph_conf["x_breaks"] and graph_conf["x_labels"]:
+                plot += ggplot.scale_x_discrete(breaks=graph_conf["x_breaks"],
+                                                labels=graph_conf["x_labels"])
             if graph_conf["limits"]:
                 plot += ggplot.ylim(graph_conf["limits"][0],
                                     graph_conf["limits"][1])
@@ -171,7 +173,7 @@ def main():
                 plot += ggplot.geom_line()
                 plot += ggplot.geom_point(alpha=0.3, size=50)
             if hasattr(rulemod, "update_plot"):
-                plot = rulemod.update_plot(gkey, graph_conf, plot)
+                plot = rulemod.update_plot(gkey, graph_conf, plot, plot_data)
             if args.dumpsave:
                 filename = "/dev/null"
             else:
