@@ -87,6 +87,8 @@ def main():
 
     columns = ("Graph", conf["vlab"], conf["xlab"], "Count", conf["ylab"])
     data = pandas.DataFrame.from_records(results, columns=columns)
+
+    # Create and save graphs
     for gkey in rulemod.graphs:
         # Graph Defaults
         graph_conf = conf.copy()
