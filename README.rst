@@ -31,15 +31,16 @@ It currently contains rulesets for:
    http://www.fantasyflightgames.com/edge_minisite.asp?eidm=232
 
 
-Requirements
-============
+Requirements and/or Assumptions
+===============================
 
-1. brew (`Installtion • homebrew Wiki`_)
-2. pip (`Installation — pip documentation`_)
-3. virtualenv (``pip install virtualenv``)
-4. virtualenvwrapper (``pip install virtualenvwrapper``)
-5. virtual environment for rpgdice (``mkvirtualenv rpgdice``)
-6. `ggplot`_ (**use install_requirements.sh**)
+1. OS X 10.9.2 Mavericks
+2. brew (`Installtion • homebrew Wiki`_)
+3. pip (`Installation — pip documentation`_)
+4. virtualenv (``pip install virtualenv``)
+5. virtualenvwrapper (``pip install virtualenvwrapper``)
+6. virtual environment for rpgdice (``mkvirtualenv rpgdice``)
+7. `ggplot`_ (**use install_requirements.sh**)
 
 .. _`Installtion • homebrew Wiki`:
    https://github.com/Homebrew/homebrew/wiki/Installation
@@ -48,16 +49,22 @@ Requirements
 .. _`ggplot`: https://github.com/yhat/ggplot/
 
 
-Research
-========
+Research and Related Links
+==========================
 
 - `Dice-Rolling Mechanisms in RPGs [PFD]`_
 - `A Treatise on Different Dice-rolling Mechanics in RPGs - RPG Design`_
+- `Die, d20 die! Part 1`_
+- `Die, d20 die! Part 2`_
 
 .. _`Dice-Rolling Mechanisms in RPGs [PFD]`:
    http://www.diku.dk/~torbenm/Troll/RPGdice.pdf
 .. _`A Treatise on Different Dice-rolling Mechanics in RPGs - RPG Design`:
    http://rpg-design.wikidot.com/evaluation
+.. _`Die, d20 die! Part 1`:
+   http://gsa.thegamernation.org/2013/10/03/die-d20-die/
+.. _`Die, d20 die! Part 2`:
+   http://gsa.thegamernation.org/2013/12/12/die-d20-die-part-2/
 
 
 Development Resources
